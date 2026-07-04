@@ -1,0 +1,37 @@
+# Cross Channel Router — Demo 配置示例
+#
+# 使用:
+#   python3 examples/demo.py
+
+adapters:
+  console: {}
+  feishu: {}             # 缺 token 自动降级为 console
+  wecom: {}              # 缺 token 自动降级为 console
+
+rules:
+  # 1) critical 优先级 → 双通道（飞书 + 企微），保证可达
+  - match:
+      priority: critical
+    route:
+      channels: [feishu, wecom]
+
+  # 2) alert_engine 来源的高/紧急消息 → 飞书
+  - match:
+      source_skill: alert_engine
+      priority: [high, critical]
+    route:
+      channels: [feishu]
+
+  # 3) 报表类 → 企微（OA 报表习惯）
+  - match:
+      message_type: [report, notify]
+    route:
+      channels: [wecom]
+
+  # 4) 兜底 → console
+  - match:
+      any: true
+    route:
+      channels: [console]
+
+audit_log_path: /tmp/router-demo-audit.jsonl
